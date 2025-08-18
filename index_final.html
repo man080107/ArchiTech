@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ArchiTech — AI Architecture Concept Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg1:#0f0f23; --bg2:#1a1a2e; --bg3:#16213e;
+      --card: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#fff;
+      --muted: rgba(255,255,255,.8);
+      --primary1:#00d4ff; --primary2:#7c3aed;
+      --accent:#2ee6a6;
+      --shadow: 0 18px 45px rgba(0,0,0,.35);
+      --navbg: rgba(255,255,255,.95);
+      --navtext:#111;
+    }
+    [data-theme="light"]{
+      --bg1:#f6f8ff; --bg2:#ffffff; --bg3:#eef2ff;
+      --card: rgba(0,0,0,.04);
+      --border: rgba(0,0,0,.12);
+      --text:#141414;
+      --muted: rgba(0,0,0,.75);
+      --navbg: rgba(255,255,255,.88);
+      --navtext:#111;
+      --shadow: 0 10px 28px rgba(0,0,0,.12);
+    }
+    body{
+      font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+      color:var(--text);
+      background: linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 50%,var(--bg3) 100%);
+      line-height:1.6; overflow-x:hidden; scroll-behavior:smooth;
+    }
+    .progress-bar{position:fixed;top:0;left:0;height:4px;width:0;background:linear-gradient(90deg,var(--primary1),var(--primary2));z-index:5000}
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:3000;background:var(--navbg);backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--border); transition:.25s; color:var(--navtext)}
+    .navbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem}
+    .brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--navtext);font-weight:900}
+    .brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary1),var(--primary2));box-shadow:var(--shadow)}
+    .nav-links{list-style:none;display:flex;gap:.35rem;flex-wrap:wrap}
+    .nav-links a{color:var(--navtext);text-decoration:none;font-weight:700;padding:.55rem .85rem;border-radius:.7rem;opacity:.9}
+    .nav-links a:hover,.nav-links a.active{background:rgba(0,0,0,.06)}
+    .spacer{flex:1}
+    .theme-toggle{border:0;background:transparent;cursor:pointer;font-weight:800}
+    .mobile-btn{display:none;border:0;background:transparent;font-size:1.6rem;cursor:pointer;margin-left:.4rem}
+
+    .mobile-menu{display:none;position:absolute;top:100%;left:0;right:0;background:var(--navbg);border-bottom:1px solid var(--border)}
+    .mobile-menu.active{display:block;animation:drop .2s ease}
+    @keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    .navbar.compact .navbar-inner{padding:.5rem 1.25rem}
+
+    .container{max-width:1200px;margin:0 auto;padding:0 1.25rem}
+    .section{padding:6rem 0; scroll-margin-top:88px}
+    .title{font-size:clamp(2.1rem,6vw,3rem);font-weight:900;margin-bottom:.5rem;
+      background:linear-gradient(135deg,#fff 0%,var(--primary1) 50%,var(--primary2) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .subtitle{opacity:.9;max-width:780px}
+
+    .hero{min-height:100vh;display:grid;place-items:center;text-align:center}
+    .hero .actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:1rem 1.35rem;border-radius:999px;font-weight:800;text-decoration:none;cursor:pointer;
+      border:0;background:linear-gradient(135deg,var(--primary1),var(--primary2));color:#fff;box-shadow:var(--shadow)}
+    .btn.secondary{background:transparent;border:2px solid var(--border);color:var(--text)}
+    .kbd{font-size:.85rem;border:1px solid var(--border);background:var(--card);padding:.15rem .45rem;border-radius:.35rem}
+
+    .grid{display:grid;gap:1rem}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-2{grid-template-columns:repeat(2,1fr)}
+    .grid-auto{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.1rem}
+    .glass{background:var(--card);border:1px solid var(--border);border-radius:20px}
+
+    /* Generator layout */
+    .gen-layout{display:grid;grid-template-columns:360px 1fr;gap:1.25rem;align-items:start}
+    .panel{position:sticky;top:104px;padding:1.1rem}
+    .panel h3{margin-bottom:.6rem}
+    .control{margin-bottom:1rem}
+    .control label{display:block;margin-bottom:.35rem;font-weight:700}
+    .control select,.control input,.control textarea{
+      width:100%;padding:.75rem 1rem;background:rgba(255,255,255,.08);
+      border:1px solid var(--border);border-radius:10px;color:var(--text)
+    }
+    .panel .row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+    .panel .btn{width:100%;justify-content:center}
+    .tiny{font-size:.86rem;opacity:.85}
+
+    .display{padding:1.1rem;min-height:600px;display:grid;grid-template-rows:auto 1fr auto;gap:1rem}
+    .preview{display:grid;place-items:center;background:rgba(255,255,255,.05);border:2px dashed var(--border);border-radius:16px;overflow:hidden;min-height:420px}
+    .preview img{max-width:100%;display:block}
+    .toolbar{display:flex;flex-wrap:wrap;gap:.5rem}
+    .toolbar .btn{padding:.65rem 1rem}
+    .history{display:flex;gap:.5rem;flex-wrap:wrap}
+    .thumb{width:92px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .skeleton{width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+      animation:shine 1.2s infinite linear}
+    @keyframes shine{from{background-position:-200px 0}to{background-position:200px 0}}
+
+    /* Gallery */
+    .filters{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0 1.1rem}
+    .chip{padding:.45rem .8rem;border-radius:999px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+    .chip.active{outline:2px solid var(--primary1)}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+    .tile{overflow:hidden;border-radius:16px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+    .tile img{width:100%;height:180px;object-fit:cover;display:block}
+    .tile .cap{padding:.7rem;display:flex;justify-content:space-between;align-items:center}
+
+    /* How it works */
+    .step{display:flex;gap:.8rem;align-items:flex-start}
+    .badge{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;font-weight:900;
+      background:linear-gradient(135deg,var(--primary1),var(--primary2));}
+
+    /* Pricing */
+    .price{font-size:2rem;font-weight:900}
+
+    /* FAQ */
+    .faq-item{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card)}
+    .faq-q{padding:1rem;cursor:pointer;font-weight:700}
+    .faq-a{padding:0 1rem;max-height:0;overflow:hidden;transition:max-height .25s ease}
+    .faq-item.open .faq-a{padding:1rem;max-height:320px}
+
+    /* Contact */
+    form .row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+    .msg{margin-top:.6rem}
+    .toast{position:fixed;right:16px;bottom:16px;background:var(--navbg);color:var(--navtext);
+      padding:.75rem 1rem;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);opacity:0;transform:translateY(12px);transition:.25s}
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    .footer{padding:2.2rem 0;text-align:center;border-top:1px solid var(--border);background:rgba(0,0,0,.06)}
+
+    /* Responsive */
+    @media (max-width:1024px){.gen-layout{grid-template-columns:1fr}.panel{position:relative;top:0}}
+    @media (max-width:820px){.nav-links{display:none}.mobile-btn{display:block} .section{scroll-margin-top:72px}}
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progress"></div>
+  <nav class="navbar" id="nav">
+    <div class="navbar-inner">
+      <a class="brand" href="#home"><span class="logo"></span>ArchiTech</a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home" class="active">Home</a></li>
+        <li><a href="#generator">Generator</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#how">How it Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="spacer"></div>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓</button>
+      <button class="mobile-btn" id="mobileBtn">☰</button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <ul class="nav-links" style="flex-direction:column;padding: .6rem 1rem;">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#generator">Generator</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#how">How it Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="home" class="section hero container">
+    <div>
+      <h1 class="title">Design concepts in seconds.</h1>
+      <p class="subtitle">Pick a style, tune details, and generate a clean architectural concept. Works offline in Demo Mode or connect your OpenAI key for real AI renders.</p>
+      <div class="actions">
+        <a class="btn" href="#generator">🚀 Start Creating <span class="kbd">G</span></a>
+        <a class="btn secondary" href="#gallery">🖼️ View Gallery</a>
+      </div>
+      <div style="margin-top:1.25rem;opacity:.85">Shortcuts: <span class="kbd">G</span> Generate • <span class="kbd">R</span> Randomize • <span class="kbd">S</span> Save</div>
+    </div>
+  </header>
+
+  <!-- GENERATOR -->
+  <section id="generator" class="section container">
+    <h2 class="title">AI Architecture Generator</h2>
+    <p class="subtitle">Two modes: <b>Demo</b> (SVG, offline) and <b>API</b> (OpenAI images). Your last settings are saved locally.</p>
+
+    <div class="gen-layout">
+      <aside class="panel card">
+        <h3>🏗️ Design Controls</h3>
+
+        <div class="control">
+          <label for="style">Architecture Style</label>
+          <select id="style">
+            <option>Modern</option>
+            <option>Futuristic</option>
+            <option>Classic</option>
+            <option>Minimalist</option>
+            <option>Sustainable</option>
+            <option>Parametric</option>
+            <option>Brutalist</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="control">
+            <label for="color">Color Theme</label>
+            <select id="color">
+              <option>White</option>
+              <option>Blue</option>
+              <option>Black</option>
+              <option>Sand</option>
+              <option>Concrete Grey</option>
+              <option>Olive</option>
+              <option>Terracotta</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="size">Size</label>
+            <select id="size">
+              <option>Small</option>
+              <option>Medium</option>
+              <option>Large</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="control">
+            <label for="mood">Mood / Lighting</label>
+            <select id="mood">
+              <option>Daylight</option>
+              <option>Golden Hour</option>
+              <option>Night</option>
+              <option>Cloudy</option>
+              <option>Neon</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="environment">Environment</label>
+            <select id="environment">
+              <option>Urban</option>
+              <option>Coastal</option>
+              <option>Forest</option>
+              <option>Desert</option>
+              <option>Mountains</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control">
+          <label for="materials">Materials</label>
+          <input id="materials" placeholder="glass, concrete, wood"/>
+          <div class="tiny">Comma separated.</div>
+        </div>
+
+        <div class="control">
+          <label for="brief">Project Brief (optional)</label>
+          <textarea id="brief" rows="3" placeholder="e.g., 3-story studio with cantilever, rooftop garden, EV chargers"></textarea>
+        </div>
+
+        <div class="control">
+          <label for="apiKey">OpenAI API Key (optional)</label>
+          <input id="apiKey" type="password" placeholder="sk-..."/>
+          <div class="tiny">If empty, Demo Mode (SVG) is used.</div>
+        </div>
+
+        <div class="row">
+          <button class="btn" id="generateBtn">🎨 Generate Image</button>
+<button class="btn secondary" id="specsBtn" type="button">🧩 Generate Specs</button>
+          <button class="btn secondary" id="randomBtn" type="button">Randomize</button>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+          <button class="btn secondary" id="saveBtn" type="button">Save</button>
+        </div>
+        <p class="tiny" style="margin-top:.4rem">Tip: Press <span class="kbd">G</span>, <span class="kbd">R</span>, or <span class="kbd">S</span></p>
+      </aside>
+
+      <div class="display card">
+        <div class="toolbar">
+          <button class="btn secondary" id="downloadPNG">Download PNG</button>
+          <button class="btn secondary" id="downloadSVG">Download SVG</button>
+          <button class="btn secondary" id="copyPrompt">Copy Prompt</button>
+          <span class="tiny" id="modeLabel"></span>
+        </div>
+        <div class="preview" id="preview"><div class="skeleton"></div></div>
+<pre id="specsOut" class="json tiny">Use “🧩 Generate Specs” to create architecture JSON.</pre>
+        <div>
+          <div class="tiny" id="info">Ready.</div>
+          <div class="history" id="history"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery" class="section container">
+    <h2 class="title">Showcase Gallery</h2>
+    <p class="subtitle">Pre-built concepts generated with Demo Mode. Filter by style or search.</p>
+
+    <div class="filters">
+      <input id="search" placeholder="Search (e.g., 'Modern Blue')" style="flex:1;padding:.7rem 1rem;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--text)"/>
+      <button class="chip active" data-filter="All">All</button>
+      <button class="chip" data-filter="Modern">Modern</button>
+      <button class="chip" data-filter="Futuristic">Futuristic</button>
+      <button class="chip" data-filter="Classic">Classic</button>
+      <button class="chip" data-filter="Minimalist">Minimalist</button>
+      <button class="chip" data-filter="Sustainable">Sustainable</button>
+    </div>
+
+    <div class="gallery" id="galleryGrid"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="section container">
+    <h2 class="title">How it Works</h2>
+    <div class="grid grid-auto" style="margin-top:1rem">
+      <div class="card step">
+        <div class="badge">1</div>
+        <div><b>Choose parameters.</b><br/>Pick style, size, materials, and mood. Add a brief for extra guidance.</div>
+      </div>
+      <div class="card step">
+        <div class="badge">2</div>
+        <div><b>Generate.</b><br/>Demo Mode creates a fast SVG concept. With an API key, real AI images are fetched.</div>
+      </div>
+      <div class="card step">
+        <div class="badge">3</div>
+        <div><b>Refine & export.</b><br/>Save to history, download PNG/SVG, or copy the prompt for your reports.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="section container">
+    <h2 class="title">Pricing (for demo)</h2>
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>Free</h3>
+        <p class="price">₹0</p>
+        <ul style="margin-top:.6rem;opacity:.9">
+          <li>• Demo Mode (SVG)</li>
+          <li>• Unlimited local history</li>
+          <li>• PNG & SVG export</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Pro (BYO Key)</h3>
+        <p class="price">Your API cost</p>
+        <ul style="margin-top:.6rem;opacity:.9">
+          <li>• Real AI images</li>
+          <li>• Higher fidelity renders</li>
+          <li>• Same UI as Free</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Education</h3>
+        <p class="price">Custom</p>
+        <ul style="margin-top:.6rem;opacity:.9">
+          <li>• Classroom mode</li>
+          <li>• Offline demo</li>
+          <li>• Lab-friendly</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section container">
+    <h2 class="title">FAQ</h2>
+    <div class="grid grid-auto" style="margin-top:1rem">
+      <div class="faq-item">
+        <div class="faq-q">Does it work without internet?</div>
+        <div class="faq-a">Yes. Demo Mode uses SVG previews generated in your browser. API Mode needs internet + your key.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Will my API key be stored?</div>
+        <div class="faq-a">No. The key is only used in your browser session for requests to OpenAI.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Why can’t I download PNG of API images?</div>
+        <div class="faq-a">Some external images block cross‑origin canvas export. You can still open the image in a new tab or take a screenshot. PNG/SVG export always works in Demo Mode.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="section container">
+    <h2 class="title">Contact</h2>
+    <p class="subtitle">Submit a message (stored locally for demo). We’ll show a toast confirmation.</p>
+    <form id="contactForm" class="card" style="padding:1rem">
+      <div class="row">
+        <input id="cName" placeholder="Your name"/>
+        <input id="cEmail" placeholder="Email"/>
+      </div>
+      <textarea id="cMsg" rows="4" class="msg" placeholder="Message"></textarea>
+      <div class="actions" style="justify-content:flex-start;margin-top:.8rem">
+        <button class="btn" type="submit">Send</button>
+        <div class="tiny" style="margin-left:.6rem">Demo only — saved to localStorage.</div>
+      </div>
+    </form>
+  </section>
+
+  <footer class="footer">
+    © <span id="year"></span> ArchiTech • Built for academic demo.
+  </footer>
+
+  <div class="toast" id="toast"></div>
+  <button id="toTop" title="Back to top" style="position:fixed;right:16px;bottom:72px;border-radius:999px;border:1px solid var(--border);background:var(--navbg);padding:.7rem 1rem;cursor:pointer;display:none">↑ Top</button>
+
+  <script>
+  // ====== Basics & UI ======
+  const progress = document.getElementById('progress');
+  const nav = document.getElementById('nav');
+  const yearEl = document.getElementById('year');
+  const mobileBtn = document.getElementById('mobileBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const navLinks = [...document.querySelectorAll('#navLinks a'), ...mobileMenu.querySelectorAll('a')];
+  const toTop = document.getElementById('toTop');
+  const themeToggle = document.getElementById('themeToggle');
+  const toast = document.getElementById('toast');
+
+  yearEl.textContent = new Date().getFullYear();
+
+  window.addEventListener('scroll', () => {
+    const s = window.scrollY, h = document.body.scrollHeight - window.innerHeight;
+    progress.style.width = (s / h) * 100 + '%';
+    nav.classList.toggle('compact', s > 10);
+    toTop.style.display = s > 600 ? 'block' : 'none';
+  });
+  toTop.onclick = () => window.scrollTo({top:0, behavior:'smooth'});
+
+  mobileBtn.onclick = () => mobileMenu.classList.toggle('active');
+  mobileMenu.addEventListener('click', (e)=>{
+    if(e.target.tagName.toLowerCase()==='a') mobileMenu.classList.remove('active');
+  });
+
+  // Active link highlight on scroll
+  const sections = ['home','generator','gallery','how','pricing','faq','contact'].map(id => document.getElementById(id));
+  const navMainLinks = document.querySelectorAll('#navLinks a');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const id = entry.target.id;
+        navMainLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      }
+    });
+  }, {rootMargin:'-50% 0px -40% 0px', threshold:0});
+  sections.forEach(s => io.observe(s));
+
+  // Theme
+  const savedTheme = localStorage.getItem('architech-theme');
+  if(savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+  themeToggle.onclick = () => {
+    const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', cur);
+    localStorage.setItem('architech-theme', cur);
+  };
+
+  // Toast
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 1800);
+  }
+
+  // ====== Generator ======
+async function generateSpecs(prompt, apiKey) {
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type":"application/json", "Authorization":`Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        {role:"system", content:"You are a precise architecture assistant that outputs strict JSON."},
+        {role:"user", content: prompt}
+      ]
+    })
+  });
+  return await resp.json();
+}
+
+  const el = (id)=>document.getElementById(id);
+  const styleEl = el('style');
+  const colorEl = el('color');
+  const sizeEl = el('size');
+  const moodEl = el('mood');
+  const envEl = el('environment');
+  const materialsEl = el('materials');
+  const briefEl = el('brief');
+  const apiKeyEl = el('apiKey');
+  const preview = el('preview');
+  const info = el('info');
+  const modeLabel = el('modeLabel');
+  const history = el('history');
+  const generateBtn = el('generateBtn');
+  const randomBtn = el('randomBtn');
+  const resetBtn = el('resetBtn');
+  const saveBtn = el('saveBtn');
+  const dlPNG = el('downloadPNG');
+  const dlSVG = el('downloadSVG');
+  const copyPromptBtn = el('copyPrompt');
+
+  // Load saved controls
+  const saved = JSON.parse(localStorage.getItem('architech-controls')||'{}');
+  ['style','color','size','mood','environment','materials','brief'].forEach(k=>{
+    const c = el(k);
+    if(saved[k]) c.value = saved[k];
+  });
+  function saveControls(){
+    const obj = {
+      style: styleEl.value, color: colorEl.value, size: sizeEl.value,
+      mood: moodEl.value, environment: envEl.value, materials: materialsEl.value, brief: briefEl.value
+    };
+    localStorage.setItem('architech-controls', JSON.stringify(obj));
+  }
+  document.querySelectorAll('#generator select, #generator input, #generator textarea').forEach(i=>i.addEventListener('change', saveControls));
+
+  let lastSVG = ''; // keep raw svg for SVG export
+
+  function buildPrompt(){
+    const p = `${sizeEl.value} ${colorEl.value} ${styleEl.value} architectural building in ${envEl.value} setting, ${moodEl.value} lighting, materials: ${materialsEl.value || 'glass, concrete'}, ${briefEl.value || ''}`.trim();
+    return p.replace(/\s+/g,' ');
+  }
+
+  // Demo SVG generator with variability
+  function demoSVG({style,color,size,mood,environment,materials,seed=Date.now()}){
+    function rnd(base=seed){
+      // simple deterministic PRNG
+      let t = base % 2147483647;
+      return () => (t = t * 48271 % 2147483647) / 2147483647;
+    }
+    const R = rnd(seed);
+    const w=960,h=560;
+    const theme = {
+      White:'#f7f8fb', Blue:'#7fb7ff', Black:'#1b1b1b', Sand:'#e6d2b5',
+      'Concrete Grey':'#a9b0b8', Olive:'#7b8d5b', Terracotta:'#c46b4d'
+    }[color] || '#d9d9d9';
+    const accent = ['#00d4ff','#7c3aed','#2ee6a6','#ffb703'][Math.floor(R()*4)];
+    const baseH = size==='Large'? R()*120+330 : size==='Medium'? R()*100+270 : R()*90+210;
+    const skew = style==='Parametric' ? (R()*12-6) : style==='Brutalist' ? (R()*2-1) : (R()*6-3);
+    const cut = style==='Minimalist' ? 0 : Math.floor(R()*4)+2;
+    const winCols = 6 + Math.floor(R()*3);
+    const winRows = 3 + Math.floor(R()*3);
+
+    // background mood tint
+    const bg1 = mood==='Night' ? '#0b1024' : mood==='Golden Hour' ? '#33240b' : mood==='Neon' ? '#0a001b' : '#0f0f23';
+    const bg2 = mood==='Night' ? '#11183a' : mood==='Golden Hour' ? '#5c3a10' : mood==='Neon' ? '#1a0038' : '#1a1a2e';
+
+    // environment hint
+    const envShape = (()=>{
+      if(environment==='Coastal') return `<rect x="0" y="${h-80}" width="${w}" height="80" fill="#2d7dd2" opacity=".25"/>`;
+      if(environment==='Forest') return `<g opacity=".25">${Array.from({length:12}).map((_,i)=>{
+        const x = i*80 + (R()*20);
+        return `<polygon points="${x},${h-60} ${x+18},${h-120} ${x+36},${h-60}" fill="#2ecc71"/>`}).join('')}</g>`;
+      if(environment==='Desert') return `<rect x="0" y="${h-60}" width="${w}" height="60" fill="#e0b663" opacity=".25"/>`;
+      if(environment==='Mountains') return `<g opacity=".25">${[0,1,2,3].map(i=>{
+        const x = i*240 + R()*80; const peak = h-180 - R()*40;
+        return `<polygon points="${x},${h-60} ${x+90},${peak} ${x+180},${h-60}" fill="#8aa3b0"/>`}).join('')}</g>`;
+      return `<rect x="0" y="${h-40}" width="${w}" height="40" fill="#7a7a7a" opacity=".18"/>`; // Urban
+    })();
+
+    const roof = style==='Classic' ? `<polygon points="${w*0.18},${h-baseH} ${w*0.5},${h-baseH-80} ${w*0.82},${h-baseH}" fill="${accent}" opacity=".28"/>` : '';
+    const extras = style==='Futuristic' ? `<circle cx="${w*0.8}" cy="${h-baseH-40}" r="28" fill="${accent}" opacity=".5"/>` :
+                   style==='Parametric'  ? `<path d="M${w*0.2} ${h-baseH} Q ${w*0.5} ${h-baseH-120} ${w*0.8} ${h-baseH}"
+                      fill="none" stroke="${accent}" stroke-width="10" opacity=".45"/>` :
+                   style==='Brutalist' ? `<rect x="${w*0.22}" y="${h-baseH-20}" width="${w*0.56}" height="16" fill="#333" opacity=".55"/>` : '';
+
+    const windows = Array.from({length:winCols*winRows}).map((_,i)=>{
+      const col=i%winCols; const row=Math.floor(i/winCols);
+      const cellW=(w*0.5)/winCols; const cellH=34;
+      const x=w*0.25 + col*cellW + 10 + skew;
+      const y=h-baseH + 24 + row*(cellH+10);
+      const op = color==='Black'? 0.35 : 0.16 + (R()*0.1);
+      return `<rect x="${x}" y="${y}" width="${cellW-20}" height="${cellH}" rx="4" fill="#000" opacity="${op}"/>`;
+    }).join('');
+
+    const notches = Array.from({length:cut}).map((_,i)=>{
+      const x = w*0.25 + (w*0.55)*(i+1)/(cut+1) - 12;
+      const y = h-baseH + 16 + R()* (baseH-60);
+      return `<rect x="${x}" y="${y}" width="24" height="24" rx="4" fill="${bg2}" opacity=".9"/>`;
+    }).join('');
+
+    const matText = (materials || 'glass, concrete').split(',')[0].trim();
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${bg1}"/><stop offset="100%" stop-color="${bg2}"/>
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="16" stdDeviation="22" flood-color="#000" flood-opacity=".45"/>
+        </filter>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#bg)"/>
+      ${envShape}
+      <g filter="url(#shadow)">
+        <rect x="${w*0.2}" y="${h-baseH}" width="${w*0.6}" height="${baseH}" rx="18" fill="${theme}" opacity="${color==='Black'?0.92:0.96}"/>
+        ${roof}
+        ${windows}
+        ${notches}
+        ${extras}
+      </g>
+      <text x="24" y="40" fill="#fff" font-family="Inter" font-size="20" opacity=".9">${size} ${color} ${style} • ${mood} • ${environment} • ${matText}</text>
+    </svg>`;
+    return { dataURI: 'data:image/svg+xml;base64,'+btoa(svg), svg };
+  }
+
+  function setPreviewLoading(){
+    preview.innerHTML = '<div class="skeleton"></div>';
+  }
+  function setPreviewImage(src){
+    preview.innerHTML = `<img id="previewImg" src="${src}" alt="Generated concept"/>`;
+  }
+
+  function addToHistory(src){
+    const wrap = document.createElement('div');
+    wrap.className = 'thumb';
+    wrap.innerHTML = `<img src="${src}" alt="history"/>`;
+    wrap.onclick = ()=> setPreviewImage(src);
+    history.prepend(wrap);
+    // keep last 12
+    while(history.children.length > 12) history.removeChild(history.lastChild);
+  }
+
+  async function generate(){
+    setPreviewLoading();
+    const params = {
+      style: styleEl.value, color: colorEl.value, size: sizeEl.value,
+      mood: moodEl.value, environment: envEl.value, materials: materialsEl.value
+    };
+    const prompt = buildPrompt();
+    info.textContent = 'Creating: ' + prompt;
+    modeLabel.textContent = '';
+
+    const key = apiKeyEl.value.trim();
+    if(key){
+      try{
+        const resp = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: { "Content-Type":"application/json", "Authorization":`Bearer ${key}` },
+          body: JSON.stringify({ model: "gpt-image-1", prompt, size:"768x512" })
+        });
+        const data = await resp.json();
+        const url = data?.data?.[0]?.url;
+        if(url){
+          setPreviewImage(url);
+          addToHistory(url);
+          modeLabel.textContent = 'Mode: API';
+          showToast('Generated with API Mode');
+        }else{
+          const {dataURI, svg} = demoSVG({...params});
+          lastSVG = svg;
+          setPreviewImage(dataURI);
+          addToHistory(dataURI);
+          modeLabel.textContent = 'Mode: Demo (fallback)';
+          showToast('API failed — used Demo Mode');
+        }
+      }catch(e){
+        const {dataURI, svg} = demoSVG({...params});
+        lastSVG = svg;
+        setPreviewImage(dataURI);
+        addToHistory(dataURI);
+        modeLabel.textContent = 'Mode: Demo (fallback)';
+        showToast('API error — used Demo Mode');
+        console.error(e);
+      }
+    }else{
+      const {dataURI, svg} = demoSVG({...params});
+      lastSVG = svg;
+      setPreviewImage(dataURI);
+      addToHistory(dataURI);
+      modeLabel.textContent = 'Mode: Demo';
+      showToast('Generated with Demo Mode');
+    }
+  }
+
+  // Buttons
+  generateBtn.onclick = generate;
+  randomBtn.onclick = ()=>{
+    const styles=['Modern','Futuristic','Classic','Minimalist','Sustainable','Parametric','Brutalist'];
+    const colors=['White','Blue','Black','Sand','Concrete Grey','Olive','Terracotta'];
+    const sizes=['Small','Medium','Large'];
+    const moods=['Daylight','Golden Hour','Night','Cloudy','Neon'];
+    const envs=['Urban','Coastal','Forest','Desert','Mountains'];
+    styleEl.value = styles[Math.floor(Math.random()*styles.length)];
+    colorEl.value = colors[Math.floor(Math.random()*colors.length)];
+    sizeEl.value = sizes[Math.floor(Math.random()*sizes.length)];
+    moodEl.value = moods[Math.floor(Math.random()*moods.length)];
+    envEl.value  = envs[Math.floor(Math.random()*envs.length)];
+    materialsEl.value = ['glass, concrete','timber, glass','rammed earth','weathering steel','bamboo, glass'][Math.floor(Math.random()*5)];
+    briefEl.value = ['cantilever volumes','atrium core','green roof','double-height lobby','parametric facade'][Math.floor(Math.random()*5)];
+    saveControls();
+    showToast('Randomized controls');
+  };
+  resetBtn.onclick = ()=>{
+    styleEl.value='Modern'; colorEl.value='White'; sizeEl.value='Medium';
+    moodEl.value='Daylight'; envEl.value='Urban'; materialsEl.value='glass, concrete';
+    briefEl.value=''; saveControls(); showToast('Controls reset');
+  };
+  saveBtn.onclick = ()=>{
+    const img = document.getElementById('previewImg');
+    if(!img){ showToast('Nothing to save'); return; }
+    addToHistory(img.src);
+    showToast('Saved to history');
+  };
+
+  copyPromptBtn.onclick = async ()=>{
+    const p = buildPrompt();
+    try{ await navigator.clipboard.writeText(p); showToast('Prompt copied'); }
+    catch{ showToast('Copy failed'); }
+  };
+
+  // Export PNG/SVG
+  dlSVG.onclick = ()=>{
+    if(!lastSVG){ showToast('SVG available in Demo Mode'); return; }
+    const blob = new Blob([lastSVG], {type:'image/svg+xml'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'architech_concept.svg';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  dlPNG.onclick = async ()=>{
+    const img = document.getElementById('previewImg');
+    if(!img){ showToast('Nothing to download'); return; }
+    // Draw onto canvas (works reliably for data URIs from Demo Mode)
+    try{
+      const canvas = document.createElement('canvas');
+      await img.decode();
+      canvas.width = img.naturalWidth || 960;
+      canvas.height = img.naturalHeight || 560;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const url = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url; a.download = 'architech_concept.png'; a.click();
+    }catch(e){
+      showToast('PNG export blocked by browser (API image). Try SVG or screenshot.');
+    }
+  };
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown',(e)=>{
+    if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+    if(e.key.toLowerCase()==='g'){ generate(); }
+    if(e.key.toLowerCase()==='r'){ randomBtn.click(); }
+    if(e.key.toLowerCase()==='s'){ saveBtn.click(); }
+  });
+
+  // Initial preview
+  (function init(){
+    const {dataURI, svg} = demoSVG({style:styleEl.value,color:colorEl.value,size:sizeEl.value,
+      mood:moodEl.value,environment:envEl.value,materials:materialsEl.value,seed:12345});
+    lastSVG = svg;
+    setPreviewImage(dataURI);
+    modeLabel.textContent = 'Mode: Demo';
+  })();
+
+  // ====== Gallery ======
+  const galleryGrid = document.getElementById('galleryGrid');
+  const search = document.getElementById('search');
+  const chips = document.querySelectorAll('.chip');
+  const sampleData = [
+    {style:'Modern', color:'White', size:'Large', mood:'Daylight', environment:'Urban', materials:'glass, concrete'},
+    {style:'Futuristic', color:'Blue', size:'Medium', mood:'Neon', environment:'Urban', materials:'glass, steel'},
+    {style:'Classic', color:'Sand', size:'Large', mood:'Golden Hour', environment:'Coastal', materials:'stone, wood'},
+    {style:'Minimalist', color:'Concrete Grey', size:'Small', mood:'Cloudy', environment:'Forest', materials:'concrete, glass'},
+    {style:'Sustainable', color:'Olive', size:'Medium', mood:'Daylight', environment:'Mountains', materials:'bamboo, glass'},
+    {style:'Parametric', color:'White', size:'Large', mood:'Night', environment:'Urban', materials:'glass, steel'},
+    {style:'Brutalist', color:'Black', size:'Medium', mood:'Cloudy', environment:'Urban', materials:'concrete'},
+    {style:'Modern', color:'Terracotta', size:'Small', mood:'Golden Hour', environment:'Desert', materials:'rammed earth'},
+  ].map((p,i)=>{
+    const g = demoSVG({...p, seed: i*777+42});
+    return {...p, src:g.dataURI, caption:`${p.style} • ${p.color}`};
+  });
+
+  function renderGallery(list){
+    galleryGrid.innerHTML='';
+    list.forEach(item=>{
+      const card = document.createElement('div');
+      card.className='tile';
+      card.innerHTML = `<img src="${item.src}" alt="${item.caption}">
+        <div class="cap">
+          <div>${item.caption}</div>
+          <button class="chip" data-open="1">Open</button>
+        </div>`;
+      card.querySelector('[data-open]').onclick = ()=> openModal(item);
+      galleryGrid.appendChild(card);
+    });
+  }
+  function openModal(item){
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:4000';
+    wrap.innerHTML = `<div class="card" style="max-width:900px;width:92vw">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+          <b>${item.style} • ${item.color}</b>
+          <button class="chip" id="mClose">Close</button>
+        </div>
+        <img src="${item.src}" style="width:100%;border-radius:12px"/>
+      </div>`;
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click',(e)=>{ if(e.target===wrap) wrap.remove(); });
+    wrap.querySelector('#mClose').onclick = ()=>wrap.remove();
+  }
+  function filterGallery(){
+    const q = search.value.toLowerCase();
+    const activeChip = [...chips].find(c=>c.classList.contains('active'));
+    const tag = activeChip ? activeChip.dataset.filter : 'All';
+    const res = sampleData.filter(d => (tag==='All' || d.style===tag) &&
+      (`${d.style} ${d.color}`.toLowerCase().includes(q)));
+    renderGallery(res);
+  }
+  chips.forEach(c=>c.addEventListener('click',()=>{
+    chips.forEach(x=>x.classList.remove('active')); c.classList.add('active'); filterGallery();
+  }));
+  search.addEventListener('input', filterGallery);
+  renderGallery(sampleData);
+
+  // ====== FAQ ======
+  document.querySelectorAll('.faq-item').forEach(i=>{
+    i.querySelector('.faq-q').addEventListener('click', ()=> i.classList.toggle('open'));
+  });
+
+  // ====== Contact Form ======
+  document.getElementById('contactForm').addEventListener('submit',(e)=>{
+    e.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const email = document.getElementById('cEmail').value.trim();
+    const msg = document.getElementById('cMsg').value.trim();
+    if(!name || !email || !msg){ showToast('Fill all fields'); return; }
+    const list = JSON.parse(localStorage.getItem('architech-messages')||'[]');
+    list.push({name,email,msg,ts:Date.now()});
+    localStorage.setItem('architech-messages', JSON.stringify(list));
+    e.target.reset();
+    showToast('Message saved (demo)');
+  });
+  </script>
+</body>
+</html>
