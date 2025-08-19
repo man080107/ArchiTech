@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ArchiTech — AI Architecture + 3D House Viewer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg1:#0f0f23; --bg2:#1a1a2e; --bg3:#16213e;
+      --card: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#fff;
+      --muted: rgba(255,255,255,.8);
+      --primary1:#00d4ff; --primary2:#7c3aed;
+      --accent:#2ee6a6;
+      --shadow: 0 18px 45px rgba(0,0,0,.35);
+      --navbg: rgba(255,255,255,.95);
+      --navtext:#111;
+    }
+    [data-theme="light"]{
+      --bg1:#f6f8ff; --bg2:#ffffff; --bg3:#eef2ff;
+      --card: rgba(0,0,0,.04);
+      --border: rgba(0,0,0,.12);
+      --text:#141414;
+      --muted: rgba(0,0,0,.75);
+      --navbg: rgba(255,255,255,.88);
+      --navtext:#111;
+      --shadow: 0 10px 28px rgba(0,0,0,.12);
+    }
+    body{
+      font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+      color:var(--text);
+      background: linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 50%,var(--bg3) 100%);
+      line-height:1.6; overflow-x:hidden; scroll-behavior:smooth;
+    }
+    .progress-bar{position:fixed;top:0;left:0;height:4px;width:0;background:linear-gradient(90deg,var(--primary1),var(--primary2));z-index:5000}
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:3000;background:var(--navbg);backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--border); transition:.25s; color:var(--navtext)}
+    .navbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem}
+    .brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;color:var(--navtext);font-weight:900}
+    .brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary1),var(--primary2));box-shadow:var(--shadow)}
+    .nav-links{list-style:none;display:flex;gap:.35rem;flex-wrap:wrap}
+    .nav-links a{color:var(--navtext);text-decoration:none;font-weight:700;padding:.55rem .85rem;border-radius:.7rem;opacity:.9}
+    .nav-links a:hover,.nav-links a.active{background:rgba(0,0,0,.06)}
+    .spacer{flex:1}
+    .theme-toggle{border:0;background:transparent;cursor:pointer;font-weight:800}
+    .mobile-btn{display:none;border:0;background:transparent;font-size:1.6rem;cursor:pointer;margin-left:.4rem}
+
+    .mobile-menu{display:none;position:absolute;top:100%;left:0;right:0;background:var(--navbg);border-bottom:1px solid var(--border)}
+    .mobile-menu.active{display:block;animation:drop .2s ease}
+    @keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    .navbar.compact .navbar-inner{padding:.5rem 1.25rem}
+
+    .container{max-width:1200px;margin:0 auto;padding:0 1.25rem}
+    .section{padding:6rem 0; scroll-margin-top:88px}
+    .title{font-size:clamp(2.1rem,6vw,3rem);font-weight:900;margin-bottom:.5rem;
+      background:linear-gradient(135deg,#fff 0%,var(--primary1) 50%,var(--primary2) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .subtitle{opacity:.9;max-width:780px}
+
+    .hero{min-height:100vh;display:grid;place-items:center;text-align:center}
+    .hero .actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:1rem 1.35rem;border-radius:999px;font-weight:800;text-decoration:none;cursor:pointer;
+      border:0;background:linear-gradient(135deg,var(--primary1),var(--primary2));color:#fff;box-shadow:var(--shadow)}
+    .btn.secondary{background:transparent;border:2px solid var(--border);color:var(--text)}
+    .kbd{font-size:.85rem;border:1px solid var(--border);background:var(--card);padding:.15rem .45rem;border-radius:.35rem}
+
+    .grid{display:grid;gap:1rem}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-2{grid-template-columns:repeat(2,1fr)}
+    .grid-auto{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.1rem}
+    .glass{background:var(--card);border:1px solid var(--border);border-radius:20px}
+
+    /* Generator layout */
+    .gen-layout{display:grid;grid-template-columns:360px 1fr;gap:1.25rem;align-items:start}
+    .panel{position:sticky;top:104px;padding:1.1rem}
+    .panel h3{margin-bottom:.6rem}
+    .control{margin-bottom:1rem}
+    .control label{display:block;margin-bottom:.35rem;font-weight:700}
+    .control select,.control input,.control textarea{
+      width:100%;padding:.75rem 1rem;background:rgba(255,255,255,.08);
+      border:1px solid var(--border);border-radius:10px;color:var(--text)
+    }
+    .panel .row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+    .panel .btn{width:100%;justify-content:center}
+    .tiny{font-size:.86rem;opacity:.85}
+
+    .display{padding:1.1rem;min-height:600px;display:grid;grid-template-rows:auto 1fr auto;gap:1rem}
+    .preview{display:grid;place-items:center;background:rgba(255,255,255,.05);border:2px dashed var(--border);border-radius:16px;overflow:hidden;min-height:420px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:.5rem}
+
+    .history{display:flex;gap:.5rem;flex-wrap:wrap}
+    .thumb{width:92px;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .skeleton{width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+      animation:shine 1.2s infinite linear}
+    @keyframes shine{from{background-position:-200px 0}to{background-position:200px 0}}
+
+    /* 3D viewer (merged from your first app, adapted to this theme) */
+    .viewer-wrap{display:grid;gap:1rem}
+    .viewer{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:1rem}
+    .house-container{perspective: 1000px; transform-style: preserve-3d; display:grid; place-items:center; min-height:420px}
+    .house-3d{transform-style: preserve-3d; transition: transform 0.3s ease; position: relative; width: 300px; height: 300px; margin: 0 auto}
+    .house-face{position: absolute; border: 2px solid rgba(0,0,0,.5)}
+    .front{width:300px;height:200px;background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); transform: translateZ(150px)}
+    .back{width:300px;height:200px;background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); transform: translateZ(-150px) rotateY(180deg)}
+    .left{width:300px;height:200px;background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); transform: rotateY(-90deg) translateZ(150px)}
+    .right{width:300px;height:200px;background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); transform: rotateY(90deg) translateZ(150px)}
+    .top{width:300px;height:300px;background: linear-gradient(135deg, #fc466b 0%, #3f5efb 100%); transform: rotateX(90deg) translateZ(200px)}
+    .bottom{width:300px;height:300px;background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); transform: rotateX(-90deg) translateZ(0)}
+    .window{position:absolute;background:#87CEEB;border:3px solid #4682B4;border-radius:8px}
+    .door{position:absolute;background:#8B4513;border:3px solid #654321;border-radius:8px 8px 0 0}
+    .roof-triangle{position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:150px solid transparent;border-right:150px solid transparent;border-bottom:80px solid #8B0000}
+
+    .slider{appearance:none;width:100%;height:8px;border-radius:5px;background:rgba(255,255,255,.16);outline:none}
+    .slider::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--primary1),var(--primary2));cursor:pointer;border:0}
+
+    .chip{padding:.45rem .8rem;border-radius:999px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+    .chip.primary{background:linear-gradient(135deg,var(--primary1),var(--primary2));color:#fff;border:0}
+
+    .float{animation:float 4s ease-in-out infinite}
+    @keyframes float{0%,100%{transform: translateY(0)}50%{transform: translateY(-10px)}}
+    .glow{box-shadow: 0 0 20px rgba(124,58,237,.6)}
+
+    /* Gallery */
+    .filters{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0 1.1rem}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+    .tile{overflow:hidden;border-radius:16px;border:1px solid var(--border);background:var(--card);cursor:pointer}
+    .tile img{width:100%;height:180px;object-fit:cover;display:block}
+    .tile .cap{padding:.7rem;display:flex;justify-content:space-between;align-items:center}
+
+    /* How it works */
+    .step{display:flex;gap:.8rem;align-items:flex-start}
+    .badge{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;font-weight:900;background:linear-gradient(135deg,var(--primary1),var(--primary2));}
+
+    /* Pricing */
+    .price{font-size:2rem;font-weight:900}
+
+    /* FAQ */
+    .faq-item{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card)}
+    .faq-q{padding:1rem;cursor:pointer;font-weight:700}
+    .faq-a{padding:0 1rem;max-height:0;overflow:hidden;transition:max-height .25s ease}
+    .faq-item.open .faq-a{padding:1rem;max-height:320px}
+
+    /* Contact */
+    form .row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+    .msg{margin-top:.6rem}
+    .toast{position:fixed;right:16px;bottom:16px;background:var(--navbg);color:var(--navtext);
+      padding:.75rem 1rem;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);opacity:0;transform:translateY(12px);transition:.25s}
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    .footer{padding:2.2rem 0;text-align:center;border-top:1px solid var(--border);background:rgba(0,0,0,.06)}
+
+    /* Responsive */
+    @media (max-width:1024px){.gen-layout{grid-template-columns:1fr}.panel{position:relative;top:0}}
+    @media (max-width:820px){.nav-links{display:none}.mobile-btn{display:block} .section{scroll-margin-top:72px}}
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progress"></div>
+  <nav class="navbar" id="nav">
+    <div class="navbar-inner">
+      <a class="brand" href="#home"><span class="logo"></span>ArchiTech</a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#home" class="active">Home</a></li>
+        <li><a href="#generator">Generator</a></li>
+        <li><a href="#viewer">3D Viewer</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#how">How it Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="spacer"></div>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓</button>
+      <button class="mobile-btn" id="mobileBtn">☰</button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <ul class="nav-links" style="flex-direction:column;padding: .6rem 1rem;">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#generator">Generator</a></li>
+        <li><a href="#viewer">3D Viewer</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#how">How it Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="home" class="section hero container">
+    <div>
+      <h1 class="title">Design concepts in seconds.</h1>
+      <p class="subtitle">Pick a style, tune details, and generate a clean architectural concept. Plus, explore it in 3D with our built‑in viewer. Works offline in Demo Mode or connect your OpenAI key for real AI renders.</p>
+      <div class="actions">
+        <a class="btn" href="#generator">🚀 Start Creating <span class="kbd">G</span></a>
+        <a class="btn secondary" href="#viewer">🏠 Open 3D Viewer</a>
+      </div>
+      <div style="margin-top:1.25rem;opacity:.85">Shortcuts: <span class="kbd">G</span> Generate • <span class="kbd">R</span> Randomize • <span class="kbd">S</span> Save</div>
+    </div>
+  </header>
+
+  <!-- GENERATOR + EMBEDDED 3D PREVIEW -->
+  <section id="generator" class="section container">
+    <h2 class="title">AI Architecture Generator</h2>
+    <p class="subtitle">Two modes: <b>Demo</b> (SVG, offline) and <b>API</b> (OpenAI images). The live 3D preview uses your controls below.</p>
+
+    <div class="gen-layout">
+      <aside class="panel card">
+        <h3>🏗️ Design Controls</h3>
+        <div class="control">
+          <label for="style">Architecture Style</label>
+          <select id="style">
+            <option>Modern</option>
+            <option>Futuristic</option>
+            <option>Classic</option>
+            <option>Minimalist</option>
+            <option>Sustainable</option>
+            <option>Parametric</option>
+            <option>Brutalist</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="control">
+            <label for="color">Color Theme</label>
+            <select id="color">
+              <option>White</option>
+              <option>Blue</option>
+              <option>Black</option>
+              <option>Sand</option>
+              <option>Concrete Grey</option>
+              <option>Olive</option>
+              <option>Terracotta</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="size">Size</label>
+            <select id="size">
+              <option>Small</option>
+              <option>Medium</option>
+              <option>Large</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="control">
+            <label for="mood">Mood / Lighting</label>
+            <select id="mood">
+              <option>Daylight</option>
+              <option>Golden Hour</option>
+              <option>Night</option>
+              <option>Cloudy</option>
+              <option>Neon</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="environment">Environment</label>
+            <select id="environment">
+              <option>Urban</option>
+              <option>Coastal</option>
+              <option>Forest</option>
+              <option>Desert</option>
+              <option>Mountains</option>
+            </select>
+          </div>
+        </div>
+        <div class="control">
+          <label for="materials">Materials</label>
+          <input id="materials" placeholder="glass, concrete, wood"/>
+          <div class="tiny">Comma separated.</div>
+        </div>
+        <div class="control">
+          <label for="brief">Project Brief (optional)</label>
+          <textarea id="brief" rows="3" placeholder="e.g., 3-story studio with cantilever, rooftop garden, EV chargers"></textarea>
+        </div>
+        <div class="row">
+          <button class="btn" id="generateBtn">⚡ Generate (Demo)</button>
+          <button class="btn secondary" id="saveBtn">💾 Save</button>
+        </div>
+        <div class="tiny" style="margin-top:.6rem">Tip: Press <span class="kbd">G</span> to generate, <span class="kbd">R</span> to randomize camera, <span class="kbd">S</span> to save.</div>
+      </aside>
+
+      <div class="display card">
+        <div class="toolbar">
+          <button class="btn secondary" id="presetFront">🏠 Front</button>
+          <button class="btn secondary" id="presetLeft">👈 Left</button>
+          <button class="btn secondary" id="presetBack">🔙 Back</button>
+          <button class="btn secondary" id="presetRight">👉 Right</button>
+          <button class="btn secondary" id="presetIso">✨ Iso</button>
+          <button class="btn secondary" id="autoBtn">🔄 Auto</button>
+          <button class="btn secondary" id="floatBtn">🎈 Float</button>
+          <button class="btn secondary" id="glowBtn">✨ Glow</button>
+          <button class="btn secondary" id="resetBtn">♻️ Reset</button>
+        </div>
+        <div class="viewer-wrap">
+          <div class="viewer">
+            <div class="house-container">
+              <div id="house3d" class="house-3d" aria-label="3D house model" title="Drag to rotate, arrows to nudge">
+                <!-- Front -->
+                <div class="house-face front">
+                  <div class="roof-triangle"></div>
+                  <div class="window" style="width:60px;height:60px;top:60px;left:50px;"></div>
+                  <div class="window" style="width:60px;height:60px;top:60px;right:50px;"></div>
+                  <div class="door" style="width:50px;height:80px;bottom:0;left:50%;transform:translateX(-50%)"></div>
+                  <div style="position:absolute;width:8px;height:8px;background:#FFD700;border-radius:50%;bottom:40px;left:calc(50% + 15px)"></div>
+                </div>
+                <!-- Back -->
+                <div class="house-face back">
+                  <div class="roof-triangle"></div>
+                  <div class="window" style="width:80px;height:50px;top:70px;left:50%;transform:translateX(-50%)"></div>
+                </div>
+                <!-- Left -->
+                <div class="house-face left">
+                  <div class="roof-triangle"></div>
+                  <div class="window" style="width:50px;height:70px;top:50px;left:50%;transform:translateX(-50%)"></div>
+                </div>
+                <!-- Right -->
+                <div class="house-face right">
+                  <div class="roof-triangle"></div>
+                  <div class="window" style="width:45px;height:45px;top:50px;left:60px"></div>
+                  <div class="window" style="width:45px;height:45px;top:110px;left:60px"></div>
+                </div>
+                <!-- Top -->
+                <div class="house-face top">
+                  <div style="position:absolute;width:30px;height:40px;background:#8B4513;top:50px;right:80px;border:2px solid #654321"></div>
+                  <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,0,0,.1) 10px,rgba(0,0,0,.1) 20px)"></div>
+                </div>
+                <!-- Bottom -->
+                <div class="house-face bottom">
+                  <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 20px,rgba(0,0,0,.1) 20px,rgba(0,0,0,.1) 22px)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="display:grid;gap:.5rem">
+            <label for="rotateX">Rotate X (<span id="rotateXValue">0°</span>)</label>
+            <input class="slider" type="range" id="rotateX" min="-180" max="180" value="0"/>
+            <label for="rotateY">Rotate Y (<span id="rotateYValue">0°</span>)</label>
+            <input class="slider" type="range" id="rotateY" min="-180" max="180" value="0"/>
+            <div class="tiny">Current: X <span id="currentX">0°</span> • Y <span id="currentY">0°</span></div>
+          </div>
+        </div>
+        <div class="history" id="history"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Standalone 3D Viewer section (same instance, just anchored) -->
+  <section id="viewer" class="section container">
+    <h2 class="title">3D House Viewer</h2>
+    <p class="subtitle">Interactive cube‑based architectural mockup. Drag, use arrow keys, or presets.</p>
+    <a class="btn secondary" href="#generator">↩️ Use with Generator Controls</a>
+  </section>
+
+  <!-- GALLERY (placeholder) -->
+  <section id="gallery" class="section container">
+    <h2 class="title">Gallery</h2>
+    <p class="subtitle">Saved snapshots appear here.</p>
+    <div id="galleryGrid" class="gallery"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how" class="section container">
+    <h2 class="title">How it works</h2>
+    <div class="grid grid-auto" style="margin-top:1rem">
+      <div class="card step"><div class="badge">1</div><div><b>Set controls</b><br/><span class="muted">Choose style, size, and mood.</span></div></div>
+      <div class="card step"><div class="badge">2</div><div><b>Preview in 3D</b><br/><span class="muted">Rotate with sliders, drag, or presets.</span></div></div>
+      <div class="card step"><div class="badge">3</div><div><b>Save snapshots</b><br/><span class="muted">Quickly build a gallery of options.</span></div></div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="section container">
+    <h2 class="title">Pricing</h2>
+    <div class="grid grid-auto" style="margin-top:1rem">
+      <div class="card"><b>Demo</b><div class="price">Free</div><div>Local 3D + snapshots</div></div>
+      <div class="card"><b>Pro</b><div class="price">$9</div><div>Coming soon</div></div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="section container">
+    <h2 class="title">FAQ</h2>
+    <div class="faq-item"><div class="faq-q">Does this work offline?</div><div class="faq-a">Yes. The 3D viewer and demo mode are offline.</div></div>
+    <div class="faq-item"><div class="faq-q">Can I export images?</div><div class="faq-a">You can save snapshots to the gallery. Export to file can be added easily.</div></div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="section container">
+    <h2 class="title">Contact</h2>
+    <form id="contactForm" class="card">
+      <div class="row">
+        <input placeholder="Name" required/>
+        <input type="email" placeholder="Email" required/>
+      </div>
+      <textarea class="msg" rows="4" placeholder="Message"></textarea>
+      <div style="margin-top:.6rem"><button class="btn" type="submit">Send</button></div>
+    </form>
+  </section>
+
+  <footer class="footer">
+    © <span id="year"></span> ArchiTech • Built with ❤️
+  </footer>
+
+  <div class="toast" id="toast">Saved!</div>
+
+  <script>
+    // ----- Navbar + progress + theme -----
+    const progress = document.getElementById('progress');
+    const nav = document.getElementById('nav');
+    const year = document.getElementById('year');
+    const themeToggle = document.getElementById('themeToggle');
+    const mobileBtn = document.getElementById('mobileBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    year.textContent = new Date().getFullYear();
+
+    document.addEventListener('scroll',()=>{
+      const h = document.documentElement;
+      const scrolled = (h.scrollTop)/(h.scrollHeight - h.clientHeight);
+      progress.style.width = (scrolled*100)+'%';
+      nav.classList.toggle('compact', h.scrollTop>10);
+    });
+    themeToggle.addEventListener('click',()=>{
+      const light = document.body.getAttribute('data-theme')==='light';
+      document.body.setAttribute('data-theme', light?'' : 'light');
+    });
+    mobileBtn.addEventListener('click',()=> mobileMenu.classList.toggle('active'));
+
+    // ----- 3D Viewer logic (merged) -----
+    const house = document.getElementById('house3d');
+    const rotateXSlider = document.getElementById('rotateX');
+    const rotateYSlider = document.getElementById('rotateY');
+    const rotateXValue = document.getElementById('rotateXValue');
+    const rotateYValue = document.getElementById('rotateYValue');
+    const currentX = document.getElementById('currentX');
+    const currentY = document.getElementById('currentY');
+
+    let autoRotateInterval=null; let isFloating=false; let isGlowing=false;
+
+    function updateRotation(){
+      const x = parseInt(rotateXSlider.value); const y = parseInt(rotateYSlider.value);
+      house.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+      rotateXValue.textContent = x+ '°';
+      rotateYValue.textContent = y+ '°';
+      currentX.textContent = x+ '°';
+      currentY.textContent = y+ '°';
+    }
+    function setView(x,y){ rotateXSlider.value=x; rotateYSlider.value=y; updateRotation(); stopAutoRotate(); }
+    function resetView(){ setView(0,0); stopFloating(); stopGlow(); }
+    function randomView(){ const rx = Math.floor(Math.random()*360)-180; const ry = Math.floor(Math.random()*360)-180; setView(rx,ry); }
+    function startAutoRotate(){ stopAutoRotate(); autoRotateInterval = setInterval(()=>{ let y=parseInt(rotateYSlider.value); y=(y+2)%360; if(y>180) y-=360; rotateYSlider.value=y; updateRotation(); },50); }
+    function stopAutoRotate(){ if(autoRotateInterval){ clearInterval(autoRotateInterval); autoRotateInterval=null; } }
+
+    function toggleFloating(){ if(isFloating){ stopFloating(); } else { house.classList.add('float'); isFloating=true; floatBtn.textContent='🎈 Stop Float'; } }
+    function stopFloating(){ house.classList.remove('float'); isFloating=false; floatBtn.textContent='🎈 Float'; }
+    function toggleGlow(){ if(isGlowing){ stopGlow(); } else { house.classList.add('glow'); isGlowing=true; glowBtn.textContent='✨ Stop Glow'; } }
+    function stopGlow(){ house.classList.remove('glow'); isGlowing=false; glowBtn.textContent='✨ Glow'; }
+
+    // Buttons
+    const presetFront = document.getElementById('presetFront');
+    const presetLeft = document.getElementById('presetLeft');
+    const presetBack = document.getElementById('presetBack');
+    const presetRight = document.getElementById('presetRight');
+    const presetIso = document.getElementById('presetIso');
+    const autoBtn = document.getElementById('autoBtn');
+    const floatBtn = document.getElementById('floatBtn');
+    const glowBtn = document.getElementById('glowBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    presetFront.addEventListener('click',()=>setView(0,0));
+    presetLeft.addEventListener('click',()=>setView(0,90));
+    presetBack.addEventListener('click',()=>setView(0,180));
+    presetRight.addEventListener('click',()=>setView(0,-90));
+    presetIso.addEventListener('click',()=>setView(-20,30));
+    autoBtn.addEventListener('click',startAutoRotate);
+    floatBtn.addEventListener('click',toggleFloating);
+    glowBtn.addEventListener('click',toggleGlow);
+    resetBtn.addEventListener('click',resetView);
+
+    rotateXSlider.addEventListener('input',updateRotation);
+    rotateYSlider.addEventListener('input',updateRotation);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown',(e)=>{
+      const step=5; let x=parseInt(rotateXSlider.value); let y=parseInt(rotateYSlider.value);
+      if(e.key==='ArrowUp'){ x=Math.max(-180,x-step); }
+      else if(e.key==='ArrowDown'){ x=Math.min(180,x+step); }
+      else if(e.key==='ArrowLeft'){ y=Math.max(-180,y-step); }
+      else if(e.key==='ArrowRight'){ y=Math.min(180,y+step); }
+      else if(e.key===' '){ e.preventDefault(); startAutoRotate(); }
+      else if(e.key==='r' || e.key==='R'){ resetView(); }
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){ e.preventDefault(); setView(x,y); }
+      if(e.key==='g' || e.key==='G'){ document.getElementById('generateBtn').click(); }
+      if(e.key==='s' || e.key==='S'){ document.getElementById('saveBtn').click(); }
+    });
+
+    // Drag rotate
+    let dragging=false, lastX=0, lastY=0;
+    house.addEventListener('mousedown',(e)=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; house.style.cursor='grabbing'; });
+    document.addEventListener('mousemove',(e)=>{
+      if(!dragging) return; const dx=e.clientX-lastX; const dy=e.clientY-lastY;
+      let xr=parseInt(rotateXSlider.value) - dy*0.5; let yr=parseInt(rotateYSlider.value) + dx*0.5;
+      xr=Math.max(-180,Math.min(180,xr)); yr=Math.max(-180,Math.min(180,yr)); setView(xr,yr); lastX=e.clientX; lastY=e.clientY;
+    });
+    document.addEventListener('mouseup',()=>{ dragging=false; house.style.cursor='grab'; });
+    house.style.cursor='grab';
+
+    // Touch
+    let lastTX=0,lastTY=0;
+    house.addEventListener('touchstart',(e)=>{ const t=e.touches[0]; lastTX=t.clientX; lastTY=t.clientY; },{passive:true});
+    house.addEventListener('touchmove',(e)=>{ const t=e.touches[0]; const dx=t.clientX-lastTX; const dy=t.clientY-lastTY; let xr=parseInt(rotateXSlider.value)-dy*0.5; let yr=parseInt(rotateYSlider.value)+dx*0.5; xr=Math.max(-180,Math.min(180,xr)); yr=Math.max(-180,Math.min(180,yr)); setView(xr,yr); lastTX=t.clientX; lastTY=t.clientY; },{passive:true});
+
+    // Initialize default view
+    setTimeout(()=> setView(-20,30), 300);
+
+    // ----- Demo generator & gallery -----
+    const historyWrap = document.getElementById('history');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const toast = document.getElementById('toast');
+
+    function showToast(msg){ toast.textContent=msg; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1400); }
+
+    document.getElementById('generateBtn').addEventListener('click',()=>{
+      // In demo, we just randomize view and push a tiny snapshot placeholder
+      randomView();
+      const thumb=document.createElement('div'); thumb.className='thumb';
+      const ph=document.createElement('div'); ph.className='skeleton'; thumb.appendChild(ph);
+      historyWrap.prepend(thumb);
+      setTimeout(()=>{ ph.remove(); const img=new Image();
+        // Use a data URL placeholder; in a real app, render canvas snapshot
+        img.src=`https://dummyimage.com/184x128/222/fff&text=${encodeURIComponent(document.getElementById('style').value)}`;
+        thumb.appendChild(img);
+        thumb.addEventListener('click',()=> galleryGrid.prepend(thumb.cloneNode(true)) );
+      },400);
+    });
+
+    document.getElementById('saveBtn').addEventListener('click',()=>{
+      if(historyWrap.firstChild){ galleryGrid.prepend(historyWrap.firstChild.cloneNode(true)); showToast('Saved to Gallery'); }
+      else{ showToast('Generate something first'); }
+    });
+
+    // FAQ toggle
+    document.querySelectorAll('.faq-item').forEach(item=>{
+      item.querySelector('.faq-q').addEventListener('click',()=> item.classList.toggle('open'));
+    });
+
+    // Contact fake submit
+    document.getElementById('contactForm').addEventListener('submit',(e)=>{e.preventDefault(); showToast('Thanks! We\'ll reply soon.'); e.target.reset();});
+  </script>
+</body>
+</html>
